@@ -12,6 +12,7 @@ repositories {
 
 dependencies {
     implementation(libs.io.ktor.serialization.kotlinx.json)
+    implementation(libs.io.ktor.server.core)
 }
 
 kotlin {

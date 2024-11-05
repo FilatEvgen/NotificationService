@@ -11,6 +11,7 @@ fun main() {
     embeddedServer(Netty, port = 8081, module = Application::module).start(wait = true)
 }
 fun Application.module(){
+    val jsonConfig = jsonConfiguration()
     install(ContentNegotiation) {
         json(jsonConfig)
     }
