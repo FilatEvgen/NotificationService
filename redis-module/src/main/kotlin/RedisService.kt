@@ -10,10 +10,10 @@ class RedisService {
     private val syncCommands: RedisCommands <String, String> = connection.sync()
 
     fun sendMessage(key: String, message: String) {
-        syncCommands.set(key, message)
+        syncCommands.rpush(key, message)
     }
     fun getMessage(key: String): String? {
-        return syncCommands.get(key)
+        return syncCommands.rpop(key)
     }
     fun close(){
         connection.close()

@@ -2,7 +2,7 @@ package org.example
 
 fun main() {
     val redisService = RedisService()
-    val key = "testKey"
+    val key = "testKeys"
     val message = "testMessage"
     redisService.sendMessage(key, message)
     println("Сообщение отправлено: $message")
