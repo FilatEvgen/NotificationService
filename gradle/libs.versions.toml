@@ -1,6 +1,7 @@
 [versions]
 kotlin = "2.0.0"
 ktor = "3.0.0"
+redis-lettuce = "6.4.0.RELEASE"
 
 [libraries]
 
@@ -11,6 +12,9 @@ io-ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-neg
 
 #ktor-common
 io-ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
+#redis
+io-lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "redis-lettuce"}
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

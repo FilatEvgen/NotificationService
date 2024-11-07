@@ -5,3 +5,4 @@ rootProject.name = "NotificationsService"
 include("notifications-api")
 include("notifications-api")
 include("common-module")
+include("redis-module")
