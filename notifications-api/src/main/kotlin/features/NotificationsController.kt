@@ -5,12 +5,14 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import org.example.Notification
+import org.example.RedisService
 
-class NotificationsController {
+class NotificationsController(private val redisService: RedisService) {
     suspend fun incomingNotification(call: ApplicationCall) {
         try {
             val notification = call.receive<Notification>()
-            call.respond(notification)
+            redisService.publishMessage("Notifications_Channel", notification.message)
+            call.respond(HttpStatusCode.OK, "Сообщение отправлено: ${notification.message}")
         } catch (e: Exception) {
             handleError(call, e)
         }
