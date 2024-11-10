@@ -1,5 +1,6 @@
 package org.example
 
+import RedisService
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -16,7 +17,7 @@ fun main() {
 
         val server = embeddedServer(Netty, port = 8081, module = Application::module)
 
-        launch {
+        launch(Dispatchers.IO) {
             runSubscriber(redisService, channel)
         }
 
@@ -54,7 +55,6 @@ suspend fun runSubscriber(redisService: RedisService, channel: String) {
 
     try {
         redisService.subscribe(channel, listener)
-        println("Подписка на канал '$channel' выполнена.")
     } catch (e: Exception) {
         println("Ошибка при подписке на канал: ${e.message}")
     }

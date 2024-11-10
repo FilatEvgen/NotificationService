@@ -16,6 +16,7 @@ dependencies {
     implementation(libs.io.ktor.server.content.negotiation)
     implementation(libs.io.ktor.serialization.kotlinx.json)
     implementation(libs.io.lettuce.core)
+    implementation(libs.io.ktor.websockets)
     implementation(project(":common-module"))
     implementation(project(":redis-module"))
 }

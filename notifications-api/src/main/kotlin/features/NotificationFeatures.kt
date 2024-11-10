@@ -1,8 +1,9 @@
 package org.example.features
 
+import NotificationsController
+import RedisService
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
-import org.example.RedisService
 
 fun Application.notificationFeatures() {
     val redisService = RedisService()
