@@ -6,8 +6,9 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
-import kotlinx.coroutines.*
+import io.ktor.server.websocket.*
 import io.lettuce.core.pubsub.RedisPubSubListener
+import kotlinx.coroutines.*
 import org.example.features.notificationFeatures
 
 fun main() {
@@ -16,7 +17,6 @@ fun main() {
         val channel = "Notifications_Channel"
 
         val server = embeddedServer(Netty, port = 8081, module = Application::module)
-
         launch(Dispatchers.IO) {
             runSubscriber(redisService, channel)
         }
@@ -35,22 +35,15 @@ suspend fun runSubscriber(redisService: RedisService, channel: String) {
     val listener = object : RedisPubSubListener<String, String> {
         override fun message(channel: String, message: String) {
             println("Получено сообщение из канала '$channel': $message")
+            GlobalScope.launch {
+                WebSocketSessionManager.sendToAll(message)
+            }
         }
-        override fun subscribed(channel: String, count: Long) {
-            println("Подписались на канал '$channel'. Количество подписчиков: $count")
-        }
-        override fun message(pattern: String, channel: String, message: String) {
-            println("Получено сообщение по паттерну '$pattern' в канале '$channel': $message")
-        }
-        override fun psubscribed(pattern: String, count: Long) {
-            println("Подписались на паттерн '$pattern'. Количество подписчиков: $count")
-        }
-        override fun unsubscribed(channel: String, count: Long) {
-            println("Отписались от канала '$channel'. Количество подписчиков: $count")
-        }
-        override fun punsubscribed(pattern: String, count: Long) {
-            println("Отписались от паттерна '$pattern'. Количество подписчиков: $count")
-        }
+        override fun subscribed(channel: String, count: Long) {}
+        override fun message(pattern: String, channel: String, message: String) {}
+        override fun psubscribed(pattern: String, count: Long) {}
+        override fun unsubscribed(channel: String, count: Long) {}
+        override fun punsubscribed(pattern: String, count: Long) {}
     }
 
     try {
@@ -66,6 +59,7 @@ suspend fun runSubscriber(redisService: RedisService, channel: String) {
 
 fun Application.module() {
     val jsonConfig = jsonConfiguration()
+    install(WebSockets)
     install(ContentNegotiation) {
         json(jsonConfig)
     }

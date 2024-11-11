@@ -3,9 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
 }
 
-group = "org.example"
-version = "unspecified"
-
 repositories {
     mavenCentral()
 }
@@ -16,7 +13,7 @@ dependencies {
     implementation(libs.io.ktor.server.content.negotiation)
     implementation(libs.io.ktor.serialization.kotlinx.json)
     implementation(libs.io.lettuce.core)
-    implementation(libs.io.ktor.websockets)
+    implementation(libs.io.ktor.server.websockets)
     implementation(project(":common-module"))
     implementation(project(":redis-module"))
 }
