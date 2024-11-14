@@ -9,6 +9,9 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.websocket.*
 import io.lettuce.core.pubsub.RedisPubSubListener
 import kotlinx.coroutines.*
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.example.features.notificationFeatures
 
 fun main() {
@@ -31,19 +34,48 @@ fun main() {
     }
 }
 
-suspend fun runSubscriber(redisService: RedisService, channel: String) {
+suspend fun runSubscriber(redisService: RedisService, channel: String) = coroutineScope {
     val listener = object : RedisPubSubListener<String, String> {
         override fun message(channel: String, message: String) {
             println("Получено сообщение из канала '$channel': $message")
-            GlobalScope.launch {
-                WebSocketSessionManager.sendToAll(message)
+
+            // Обработка сообщения
+            try {
+                // Преобразуем строку в объект Notification
+                val notification = Json.decodeFromString<Notification>(message)
+
+                // Отправляем уведомление через WebSocket
+                launch {
+                    val jsonMessage = Json.encodeToString(notification)
+                    WebSocketSessionManager.sendToAll(jsonMessage)
+                    println("Отправлено уведомление через WebSocket: $jsonMessage")
+                }
+            } catch (e: SerializationException) {
+                println("Ошибка десериализации сообщения: ${e.message}. Сообщение: $message")
+            } catch (e: Exception) {
+                println("Ошибка при обработке сообщения: ${e.message}")
             }
         }
-        override fun subscribed(channel: String, count: Long) {}
-        override fun message(pattern: String, channel: String, message: String) {}
-        override fun psubscribed(pattern: String, count: Long) {}
-        override fun unsubscribed(channel: String, count: Long) {}
-        override fun punsubscribed(pattern: String, count: Long) {}
+
+        override fun subscribed(channel: String, count: Long) {
+            println("Подписано на канал '$channel'. Текущий счетчик: $count")
+        }
+
+        override fun message(pattern: String, channel: String, message: String) {
+            println("Получено сообщение по паттерну '$pattern' из канала '$channel': $message")
+        }
+
+        override fun psubscribed(pattern: String, count: Long) {
+            println("Подписано на паттерн '$pattern'. Текущий счетчик: $count")
+        }
+
+        override fun unsubscribed(channel: String, count: Long) {
+            println("Отписано от канала '$channel'. Текущий счетчик: $count")
+        }
+
+        override fun punsubscribed(pattern: String, count: Long) {
+            println("Отписано от паттерна '$pattern'. Текущий счетчик: $count")
+        }
     }
 
     try {
@@ -52,6 +84,7 @@ suspend fun runSubscriber(redisService: RedisService, channel: String) {
         println("Ошибка при подписке на канал: ${e.message}")
     }
 
+    // Бесконечный цикл для поддержания подписки
     while (true) {
         delay(1000)
     }

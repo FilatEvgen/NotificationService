@@ -24,16 +24,20 @@ object NotificationClient {
     }
     suspend fun connectToNotifications() {
         client.ws("/notifications/ws") {
-            for (message in incoming) {
-                when (message) {
-                    is Frame.Text -> {
-                        val notification = Json.decodeFromString<Notification>(message.readText())
-                        println("Получено уведомление: ${notification.title} - ${notification.message}")
-                    }
-                    else -> {
-                        println("Получен другой тип сообщения")
+            try {
+                for (message in incoming) {
+                    when (message) {
+                        is Frame.Text -> {
+                            val notification = Json.decodeFromString<Notification>(message.readText())
+                            println("Получено уведомление: ${notification.title} - ${notification.message}")
+                        }
+                        else -> {
+                            println("Получен другой тип сообщения")
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                println("Ошибка при получении сообщения: ${e.message}")
             }
         }
     }
