@@ -27,7 +27,7 @@ fun main() {
         launch(Dispatchers.IO) {
             runSubscriber(redisService, channel)
         }
-        val telegramBotController = TelegramBotController("7933784481:AAFqZoO2N4xvx76D4nzoXofVrSjW184fquM")
+        val telegramBotController = TelegramBotController(System.getenv("TG_TOKEN"))
         serverJob.join()
         Runtime.getRuntime().addShutdownHook(Thread {
             println("Закрываем соединение с Redis...")
