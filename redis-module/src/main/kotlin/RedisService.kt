@@ -2,7 +2,7 @@ import io.lettuce.core.RedisClient
 import io.lettuce.core.pubsub.RedisPubSubListener
 
 class RedisService {
-    private val redisClient = RedisClient.create("redis://localhost:6379") // Убедитесь, что адрес правильный
+    private val redisClient = RedisClient.create("redis://localhost:6379")
     private val connection = redisClient.connect()
     private val asyncCommands = connection.async()
 

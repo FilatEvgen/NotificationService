@@ -12,6 +12,9 @@ import org.example.Notification
 
 object NotificationClient {
     private val client = HttpClient(CIO){
+        install(HttpTimeout) {
+            requestTimeoutMillis = 10000
+        }
         install(ContentNegotiation) {
             json(Json{
                 ignoreUnknownKeys = true

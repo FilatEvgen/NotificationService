@@ -19,13 +19,16 @@ fun main() {
         val redisService = RedisService()
         val channel = "Notifications_Channel"
 
-        val server = embeddedServer(Netty, port = 8081, module = Application::module)
+        val serverJob = launch(Dispatchers.IO) {
+            embeddedServer(Netty, port = 8081, module = Application::module).start(wait = true)
+        }
+        delay(1000)
+
         launch(Dispatchers.IO) {
             runSubscriber(redisService, channel)
         }
-
-        server.start(wait = true)
-
+        val telegramBotController = TelegramBotController("7933784481:AAFqZoO2N4xvx76D4nzoXofVrSjW184fquM")
+        serverJob.join()
         Runtime.getRuntime().addShutdownHook(Thread {
             println("Закрываем соединение с Redis...")
             redisService.close()
@@ -86,7 +89,7 @@ suspend fun runSubscriber(redisService: RedisService, channel: String) = corouti
 
     // Бесконечный цикл для поддержания подписки
     while (true) {
-        delay(1000)
+        delay(3000)
     }
 }
 
