@@ -1,6 +1,6 @@
 package org.example.features
 
-import NotificationsController
+import org.example.controllers.NotificationsController
 import RedisService
 import io.ktor.server.application.*
 import io.ktor.server.routing.*

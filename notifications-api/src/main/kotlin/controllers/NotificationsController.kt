@@ -1,3 +1,6 @@
+package org.example.controllers
+
+import RedisService
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*

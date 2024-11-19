@@ -9,14 +9,13 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.example.Notification
 
-
 object NotificationClient {
-    private val client = HttpClient(CIO){
+    private val client = HttpClient(CIO) {
         install(HttpTimeout) {
             requestTimeoutMillis = 10000
         }
         install(ContentNegotiation) {
-            json(Json{
+            json(Json {
                 ignoreUnknownKeys = true
             })
         }
@@ -25,6 +24,7 @@ object NotificationClient {
             url("http://localhost:8081")
         }
     }
+
     suspend fun connectToNotifications() {
         client.ws("/notifications/ws") {
             try {
@@ -32,7 +32,7 @@ object NotificationClient {
                     when (message) {
                         is Frame.Text -> {
                             val notification = Json.decodeFromString<Notification>(message.readText())
-                            println("Получено уведомление: ${notification.title} - ${notification.message}")
+                            sendNotificationToBot(notification) // Отправляем уведомление в бот
                         }
                         else -> {
                             println("Получен другой тип сообщения")
@@ -44,16 +44,23 @@ object NotificationClient {
             }
         }
     }
-    fun cloe()  {
+
+    private suspend fun sendNotificationToBot(notification: Notification) {
+        // Здесь вы можете отправить уведомление в Telegram
+        println("Отправлено уведомление в Telegram: ${notification.title} - ${notification.message}")
+    }
+
+    fun close() {
         client.close()
     }
 }
-fun main () = runBlocking{
+
+fun main() = runBlocking {
     try {
         NotificationClient.connectToNotifications()
-    }catch (e: Exception) {
+    } catch (e: Exception) {
         println("Ошибка: ${e.message}")
-    }finally {
-        NotificationClient.cloe()
+    } finally {
+        NotificationClient.close()
     }
 }
