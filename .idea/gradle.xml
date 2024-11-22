@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/notifications-api" />
             <option value="$PROJECT_DIR$/redis-client-module" />
             <option value="$PROJECT_DIR$/redis-module" />
+            <option value="$PROJECT_DIR$/telegram-bot-module" />
           </set>
         </option>
       </GradleProjectSettings>
