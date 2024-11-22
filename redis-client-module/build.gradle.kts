@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.io.ktor.client.content.negotiation)
     implementation(libs.io.ktor.serialization.kotlinx.json)
     implementation(libs.io.ktor.client.logging)
+    implementation(project(":notifications-api"))
     implementation("eu.vendeli:telegram-bot:7.4.1")
     ksp("eu.vendeli:ksp:7.4.1")
 }

@@ -8,6 +8,7 @@ import io.ktor.websocket.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.example.Notification
+import org.example.WebSocketSessionManager
 
 object NotificationClient {
     private val client = HttpClient(CIO) {
@@ -28,11 +29,12 @@ object NotificationClient {
     suspend fun connectToNotifications() {
         client.ws("/notifications/ws") {
             try {
+                WebSocketSessionManager.addSession(this)
                 for (message in incoming) {
                     when (message) {
                         is Frame.Text -> {
                             val notification = Json.decodeFromString<Notification>(message.readText())
-                            sendNotificationToBot(notification) // Отправляем уведомление в бот
+                            sendNotificationToBot(notification)
                         }
                         else -> {
                             println("Получен другой тип сообщения")
@@ -41,10 +43,11 @@ object NotificationClient {
                 }
             } catch (e: Exception) {
                 println("Ошибка при получении сообщения: ${e.message}")
+            } finally {
+                WebSocketSessionManager.removeSession(this)
             }
         }
     }
-
     private suspend fun sendNotificationToBot(notification: Notification) {
         println("Отправлено уведомление в Telegram: ${notification.title} - ${notification.message}")
     }

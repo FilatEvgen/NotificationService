@@ -38,12 +38,15 @@ suspend fun runSubscriber(redisService: RedisService, channel: String) = corouti
     val listener = object : RedisPubSubListener<String, String> {
         override fun message(channel: String, message: String) {
             println("Получено сообщение из канала '$channel': $message")
-            try {
-                val notification = Json.decodeFromString<Notification>(message)
-            } catch (e: SerializationException) {
-                println("Ошибка десериализации сообщения: ${e.message}. Сообщение: $message")
-            } catch (e: Exception) {
-                println("Ошибка при обработке сообщения: ${e.message}")
+            launch {
+                try {
+                    val notification = Json.decodeFromString<Notification>(message)
+                    WebSocketSessionManager.sendToAll(message)
+                } catch (e: SerializationException) {
+                    println("Ошибка десериализации сообщения: ${e.message}. Сообщение: $message")
+                } catch (e: Exception) {
+                    println("Ошибка при обработке сообщения: ${e.message}")
+                }
             }
         }
 

@@ -23,7 +23,6 @@ dependencies {
     ksp("eu.vendeli:ksp:7.4.1")
     implementation(project(":common-module"))
     implementation(project(":redis-module"))
-    implementation(project(":redis-client-module"))
 }
 kotlin {
     jvmToolchain(21)
