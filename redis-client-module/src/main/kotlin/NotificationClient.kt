@@ -46,7 +46,6 @@ object NotificationClient {
     }
 
     private suspend fun sendNotificationToBot(notification: Notification) {
-        // Здесь вы можете отправить уведомление в Telegram
         println("Отправлено уведомление в Telegram: ${notification.title} - ${notification.message}")
     }
 

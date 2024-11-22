@@ -10,14 +10,13 @@ import org.example.Commands.START
 class StartController {
     @CommandHandler([START])
     suspend fun start(user: User, bot: TelegramBot) {
-        // Запускаем WebSocket соединение
         try {
             NotificationClient.connectToNotifications()
             message("Вы успешно подключены к WebSocket. Ожидайте уведомления!")
-                .send(user, bot) // Отправка сообщения пользователю
+                .send(user, bot)
         } catch (e: Exception) {
             message("Ошибка при подключении к WebSocket: ${e.message}")
-                .send(user, bot) // Отправка сообщения об ошибке
+                .send(user, bot)
         }
     }
 }

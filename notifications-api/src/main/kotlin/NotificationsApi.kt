@@ -38,7 +38,6 @@ suspend fun runSubscriber(redisService: RedisService, channel: String) = corouti
     val listener = object : RedisPubSubListener<String, String> {
         override fun message(channel: String, message: String) {
             println("Получено сообщение из канала '$channel': $message")
-            // Обработка сообщения
             try {
                 val notification = Json.decodeFromString<Notification>(message)
             } catch (e: SerializationException) {
@@ -75,7 +74,6 @@ suspend fun runSubscriber(redisService: RedisService, channel: String) = corouti
         println("Ошибка при подписке на канал: ${e.message}")
     }
 
-    // Бесконечный цикл для поддержания подписки
     while (true) {
         delay(3000)
     }
