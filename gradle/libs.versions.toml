@@ -1,9 +1,8 @@
 [versions]
-kotlin = "2.0.21"
-ktor = "3.0.0"
+kotlin = "2.1.0-RC2"
+ktor = "3.0.1"
 redis-lettuce = "6.4.0.RELEASE"
 telegram-bot = "6.2.0"
-ksp-dependecies = "7.4.1"
 ksp-version = "2.0.0-1.0.22"
 
 

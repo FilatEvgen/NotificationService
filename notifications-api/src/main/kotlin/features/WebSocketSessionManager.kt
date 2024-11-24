@@ -2,20 +2,35 @@ package org.example
 
 import io.ktor.websocket.*
 
+data class SessionData(
+    val session: DefaultWebSocketSession,
+    val subscribedChannels: MutableSet<String> = mutableSetOf()
+)
+
 object WebSocketSessionManager {
-    private val sessions = mutableSetOf<DefaultWebSocketSession>()
+    private val sessions = mutableSetOf<SessionData>()
 
     fun addSession(session: DefaultWebSocketSession) {
-        sessions.add(session)
+        sessions.add(SessionData(session))
     }
 
     fun removeSession(session: DefaultWebSocketSession) {
-        sessions.remove(session)
+        sessions.removeIf { it.session == session }
     }
 
-    suspend fun sendToAll(message: String) {
-        for (session in sessions) {
-            session.send(message)
+    fun subscribeToChannel(session: DefaultWebSocketSession, channel: String) {
+        sessions.find { it.session == session }?.subscribedChannels?.add(channel)
+    }
+
+    fun unsubscribeFromChannel(session: DefaultWebSocketSession, channel: String) {
+        sessions.find { it.session == session }?.subscribedChannels?.remove(channel)
+    }
+
+    suspend fun sendToChannel(channel: String, message: String) {
+        for (sessionData in sessions) {
+            if (sessionData.subscribedChannels.contains(channel)) {
+                sessionData.session.send(message)
+            }
         }
     }
 }

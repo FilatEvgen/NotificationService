@@ -9,8 +9,6 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.websocket.*
 import io.lettuce.core.pubsub.RedisPubSubListener
 import kotlinx.coroutines.*
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
 import org.example.features.notificationFeatures
 
 
@@ -39,14 +37,7 @@ suspend fun runSubscriber(redisService: RedisService, channel: String) = corouti
         override fun message(channel: String, message: String) {
             println("Получено сообщение из канала '$channel': $message")
             launch {
-                try {
-                    val notification = Json.decodeFromString<Notification>(message)
-                    WebSocketSessionManager.sendToAll(message)
-                } catch (e: SerializationException) {
-                    println("Ошибка десериализации сообщения: ${e.message}. Сообщение: $message")
-                } catch (e: Exception) {
-                    println("Ошибка при обработке сообщения: ${e.message}")
-                }
+                WebSocketSessionManager.sendToChannel(channel, message)
             }
         }
 
