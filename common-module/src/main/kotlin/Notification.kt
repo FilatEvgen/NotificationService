@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 
 data class Notification(
     val title: String,
-    val message: String
+    val message: String,
+    val channels: List<String>
 )

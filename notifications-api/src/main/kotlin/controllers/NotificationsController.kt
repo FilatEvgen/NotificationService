@@ -16,8 +16,11 @@ class NotificationsController(private val redisService: RedisService) {
         try {
             val notification = call.receive<Notification>()
             println("Получено уведомление: ${notification.title} - ${notification.message}")
-            redisService.publishMessage("Notifications_Channel", Json.encodeToString(notification))
-            println("Сообщение отправлено в Redis: ${notification.message}")
+            // Отправляем сообщение в каждый канал из списка
+            for (channel in notification.channels) {
+                redisService.publishMessage(channel, Json.encodeToString(notification))
+                println("Сообщение отправлено в Redis: ${notification.message} в канал: $channel")
+            }
             call.respond(HttpStatusCode.OK, "Сообщение отправлено: ${notification.message}")
         } catch (e: Exception) {
             handleError(call, e)
