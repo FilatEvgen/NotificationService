@@ -3,7 +3,7 @@ package org.example
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Notification(
+data class NotificationsMessage(
     val message: String,
     val title: String
 )

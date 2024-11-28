@@ -16,6 +16,8 @@ class NotificationsController(private val redisService: RedisService) {
         try {
             val notification = call.receive<Notification>()
             println("Получено уведомление: ${notification.title} - ${notification.message}")
+            // кешируем
+            redisService.cacheNotification(notification)
             // Отправляем сообщение в каждый канал из списка
             for (channel in notification.channels) {
                 redisService.publishMessage(channel, Json.encodeToString(notification))
