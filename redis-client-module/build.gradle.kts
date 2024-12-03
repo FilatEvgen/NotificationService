@@ -1,8 +1,7 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlinx.serialization)
-    id("com.google.devtools.ksp") version "2.0.21-1.0.26"
-    id("eu.vendeli.telegram-bot") version "7.4.1"
+
 
 }
 
@@ -22,8 +21,7 @@ dependencies {
     implementation(project(":notifications-api"))
     implementation(project(":redis-module"))
     implementation(project(":common-module"))
-    implementation("eu.vendeli:telegram-bot:7.4.1")
-    ksp("eu.vendeli:ksp:7.4.1")
+
 }
 kotlin {
     jvmToolchain(21)

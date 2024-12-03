@@ -6,3 +6,4 @@ suspend fun main() {
     val bot = TelegramBot(System.getenv("TG_TOKEN"))
     bot.handleUpdates()
 }
+
