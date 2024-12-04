@@ -1,9 +1,8 @@
 import io.lettuce.core.RedisClient
-import io.lettuce.core.pubsub.RedisPubSubListener
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection
+import io.lettuce.core.pubsub.RedisPubSubListener
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.decodeFromString
 import org.example.Notification
 
 class RedisService {
@@ -22,11 +21,11 @@ class RedisService {
         }
     }
 
-    fun getCachedNotifications(channel: String): List<Notification> {
+    fun getCachedNotifications(channel: String): List<String> {
         val key = "notifications:$channel"
         val notificationJsonList = asyncCommands.lrange(key, 0, -1).get() ?: emptyList() // Обработка null
         println("Кешированные уведомления из канала '$channel': $notificationJsonList")
-        return notificationJsonList.map { Json.decodeFromString<Notification>(it) }
+        return notificationJsonList
     }
 
     fun publishMessage(channel: String, message: String) {
@@ -41,8 +40,15 @@ class RedisService {
     }
 
     fun close() {
-        pubSubConnection.close() // Закрываем соединение pub/sub
-        connection.close()
-        redisClient.shutdown() // Закрываем Redis клиент
+        try {
+            if (::pubSubConnection.isInitialized) {
+                pubSubConnection.close() // Закрываем соединение pub/sub
+            }
+            connection.close()
+        } catch (e: Exception) {
+            println("Ошибка при закрытии соединений: ${e.message}")
+        } finally {
+            redisClient.shutdown() // Закрываем Redis клиент
+        }
     }
 }

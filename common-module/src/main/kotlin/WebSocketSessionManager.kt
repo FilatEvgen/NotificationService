@@ -1,7 +1,7 @@
 package org.example
 
-import io.ktor.websocket.*
-
+import io.ktor.websocket.DefaultWebSocketSession
+import io.ktor.websocket.send
 
 object WebSocketSessionManager {
     private val sessions = mutableSetOf<SessionData>()

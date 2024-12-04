@@ -16,32 +16,33 @@ import org.example.WebSocketSessionManager
 object NotificationClient {
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true }) // Настройка JSON-сериализации
+            json(Json { ignoreUnknownKeys = true })
         }
-        install(WebSockets) // Установка поддержки WebSocket
+        install(WebSockets)
         defaultRequest {
-            url("http://localhost:8081") // Базовый URL для запросов
+            url("http://localhost:8081")
         }
     }
 
     private lateinit var session: WebSocketSession
-    private val redisService = RedisService() // Предполагается, что это ваш сервис для работы с Redis
+    var redisService = RedisService()
 
     suspend fun connectToNotifications() {
         client.webSocket("/notifications/ws") {
-            session = this // Сохраняем текущую сессию
+            session = this
             WebSocketSessionManager.addSession(this)
 
-            // Подписываемся на каналы Redis
             redisService.subscribe("Notifications_Channel", object : RedisPubSubListener<String, String> {
                 override fun message(channel: String, message: String) {
                     println("Получено сообщение из канала '$channel': $message")
-                    // Обработка уведомления
-                    val notification = Json.decodeFromString<Notification>(message) // Декодируем сообщение в Notification
-                    handleNotification(notification) // Передаем объект Notification
+                    try {
+                        val notification = Json.decodeFromString<Notification>(message)
+                        handleNotification(notification)
+                    } catch (e: Exception) {
+                        println("Ошибка декодирования сообщения: ${e.message}")
+                    }
                 }
 
-                // Остальные методы оставляем пустыми или добавляем логи
                 override fun message(pattern: String, channel: String, message: String) {}
                 override fun subscribed(channel: String, count: Long) {}
                 override fun unsubscribed(channel: String, count: Long) {}
@@ -49,19 +50,22 @@ object NotificationClient {
                 override fun punsubscribed(pattern: String, count: Long) {}
             })
 
-            // Получаем кэшированные уведомления из канала
             val cachedNotifications = redisService.getCachedNotifications("Notifications_Channel")
             cachedNotifications.forEach { notificationJson ->
-                val notification = Json.decodeFromString<Notification>(notificationJson.toString()) // Декодируем JSON в Notification
-                handleNotification(notification) // Передаем объект Notification
+                try {
+                    val notification = Json.decodeFromString<Notification>(notificationJson)
+                    handleNotification(notification)
+                } catch (e: Exception) {
+                    println("Ошибка декодирования кэшированного уведомления: ${e.message}")
+                }
             }
 
             try {
                 for (message in incoming) {
                     when (message) {
                         is Frame.Text -> {
-                            val notificationsMessage = Json.decodeFromString<Notification>(message.readText()) // Декодируем текст сообщения в Notification
-                            handleNotification(notificationsMessage) // Передаем объект Notification
+                            val notificationsMessage = Json.decodeFromString<Notification>(message.readText())
+                            handleNotification(notificationsMessage)
                         }
                         else -> {
                             println("Получен другой тип сообщения")
@@ -80,19 +84,17 @@ object NotificationClient {
         println("Обработка уведомления: Заголовок: ${notification.title}, Сообщение: ${notification.message}, Каналы: ${notification.channels.joinToString(", ")}")
     }
 
-    fun close() {
-        client.close() // Закрываем клиент
-    }
 }
 
 fun main() = runBlocking {
     launch {
         try {
-            NotificationClient.connectToNotifications() // Подключаемся к уведомлениям
+            NotificationClient.connectToNotifications()
         } catch (e: Exception) {
-            println("Ошибка: ${e.message}") // Обработка ошибок
+            println("Ошибка: ${e.message}")
         }
     }
-    delay(10000) // Ждем 10 секунд для получения сообщений
-    NotificationClient.close() // Закрываем клиент после ожидания
+    while (true) {
+        delay(10000)
+    }
 }
