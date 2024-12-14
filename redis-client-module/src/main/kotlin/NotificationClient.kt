@@ -2,6 +2,8 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.websocket.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.websocket.*
@@ -19,49 +21,71 @@ object NotificationClient {
             json(Json { ignoreUnknownKeys = true })
         }
         install(WebSockets)
+        install(Logging) {
+            level = LogLevel.ALL
+        }
         defaultRequest {
             url("http://localhost:8081")
+        }
+        engine{
+            requestTimeout = 60_000
         }
     }
 
     private lateinit var session: WebSocketSession
     var redisService = RedisService()
+    var isRunning = false
 
     suspend fun connectToNotifications() {
-        client.webSocket("/notifications/ws") {
-            session = this
-            WebSocketSessionManager.addSession(this)
+        isRunning = true
+        try {
+            println("Попытка подключения к WebSocket.......")
+            client.webSocket("/notifications/ws") {
+                session = this
+                WebSocketSessionManager.addSession(this)
+                println("Подключение к WebSocket успешно....")
 
-            redisService.subscribe("Notifications_Channel", object : RedisPubSubListener<String, String> {
-                override fun message(channel: String, message: String) {
-                    println("Получено сообщение из канала '$channel': $message")
+                // Подписка на Redis
+                redisService.subscribe("Notifications_Channel", object : RedisPubSubListener<String, String> {
+                    override fun message(channel: String, message: String) {
+                        println("Получено сообщение из канала '$channel': $message")
+                        try {
+                            val notification = Json.decodeFromString<Notification>(message)
+                            handleNotification(notification)
+                            launch {
+                                println("Отправка уведомления через WebSocket: $message")
+                                session.send(message)
+                            }
+                        } catch (e: Exception) {
+                            println("Ошибка декодирования сообщения: ${e.message}")
+                        }
+                    }
+
+                    override fun message(pattern: String, channel: String, message: String) {}
+                    override fun subscribed(channel: String, count: Long) {}
+                    override fun unsubscribed(channel: String, count: Long) {}
+                    override fun psubscribed(pattern: String, count: Long) {}
+                    override fun punsubscribed(pattern: String, count: Long) {}
+                })
+
+                // Получение кэшированных уведомлений
+                val cachedNotifications = redisService.getCachedNotifications("Notifications_Channel")
+                cachedNotifications.forEach { notificationJson ->
                     try {
-                        val notification = Json.decodeFromString<Notification>(message)
+                        val notification = Json.decodeFromString<Notification>(notificationJson)
                         handleNotification(notification)
+                        launch {
+                            println("Отправка кэшированного уведомления через WebSocket: $notificationJson")
+                            session.send(notificationJson)
+                        }
                     } catch (e: Exception) {
-                        println("Ошибка декодирования сообщения: ${e.message}")
+                        println("Ошибка декодирования кэшированного уведомления: ${e.message}")
                     }
                 }
 
-                override fun message(pattern: String, channel: String, message: String) {}
-                override fun subscribed(channel: String, count: Long) {}
-                override fun unsubscribed(channel: String, count: Long) {}
-                override fun psubscribed(pattern: String, count: Long) {}
-                override fun punsubscribed(pattern: String, count: Long) {}
-            })
-
-            val cachedNotifications = redisService.getCachedNotifications("Notifications_Channel")
-            cachedNotifications.forEach { notificationJson ->
-                try {
-                    val notification = Json.decodeFromString<Notification>(notificationJson)
-                    handleNotification(notification)
-                } catch (e: Exception) {
-                    println("Ошибка декодирования кэшированного уведомления: ${e.message}")
-                }
-            }
-
-            try {
+                // Обработка входящих сообщений
                 for (message in incoming) {
+                    if (!isRunning) break // Проверка на завершение
                     when (message) {
                         is Frame.Text -> {
                             val notificationsMessage = Json.decodeFromString<Notification>(message.readText())
@@ -72,12 +96,18 @@ object NotificationClient {
                         }
                     }
                 }
-            } catch (e: Exception) {
-                println("Ошибка при получении сообщения: ${e.message}")
-            } finally {
-                WebSocketSessionManager.removeSession(this)
             }
+        } catch (e: Exception) {
+            println("Ошибка при подключении к WebSocket: ${e.message}")
+        } finally {
+            isRunning = false
+            WebSocketSessionManager.removeSession(session as DefaultWebSocketSession)
         }
+    }
+
+    fun stop() {
+        isRunning = false // Устанавливаем флаг завершения
+        // Здесь можно добавить логику для отключения от WebSocket, если это необходимо
     }
 
     private fun handleNotification(notification: Notification) {

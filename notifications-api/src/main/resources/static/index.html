@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная страница</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .navbar {
+            background-color: #007BFF;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .navbar div {
+            cursor: pointer;
+        }
+        .header {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 48px;
+            font-weight: bold;
+        }
+        .content {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <div class="home">Главная</div>
+    <div onclick="location.href='notifications.html'">Уведомления <span id="notificationCountMain">(0)</span></div>
+    <div>Настройки</div>
+    <div>Помощь</div>
+</div>
+<div id="notificationArea" style="position: relative; margin-top: 20px;"></div> <!-- Контейнер для уведомлений -->
+
+
+<div class="header">Добро пожаловать на сайт KosDeveloper</div>
+
+
+<div class="content">
+    <h2>Описание проекта</h2>
+    <p>
+        KosDeveloper — это платформа, предназначенная для управления уведомлениями и взаимодействия с пользователями.
+        Мы стремимся предоставить удобный интерфейс для получения и обработки уведомлений в реальном времени.
+    </p>
+    <h3>Основные функции:</h3>
+    <ul>
+        <li>Получение уведомлений в реальном времени.</li>
+        <li>Управление уведомлениями: просмотр, удаление и отметка как просмотренные.</li>
+        <li>Интуитивно понятный интерфейс для пользователей.</li>
+    </ul>
+    <p>
+        Мы надеемся, что наш проект будет полезен для вас и поможет в управлении важной информацией.
+    </p>
+</div>
+<script src="js/main.js"></script> <!-- Подключаем main.js -->
+</body>
+</html>

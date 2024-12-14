@@ -4,13 +4,15 @@ import RedisService
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
+import io.ktor.server.http.content.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.lettuce.core.pubsub.RedisPubSubListener
 import kotlinx.coroutines.*
 import org.example.features.notificationFeatures
-
 
 fun main() {
     runBlocking {
@@ -38,7 +40,7 @@ suspend fun runSubscriber(redisService: RedisService, channel: String) = corouti
         override fun message(channel: String, message: String) {
             println("Получено сообщение из канала '$channel': $message")
             launch {
-                WebSocketSessionManager.sendToChannel(channel, message)
+                WebSocketSessionManager.sendMessageToChannel(channel, message)
             }
         }
 
@@ -82,5 +84,34 @@ fun Application.module() {
     install(ContentNegotiation) {
         json(jsonConfig)
     }
-    notificationFeatures()
+
+    // Настройка маршрутов для статических файлов
+    routing {
+        staticResources("/static", "static") // Обслуживание статических файлов из папки resources/static
+
+        get("/") {
+            call.respondRedirect("/static/index.html") // Перенаправление на главную страницу
+        }
+
+        notificationFeatures() // Вызов функции для настройки уведомлений
+    }
+}
+
+fun handleDeleteNotifications(viewedIds: List<String>, channel: String) {
+    val redisService = RedisService()
+    redisService.removeNotifications(channel, viewedIds)
+
+    // Получаем обновленный список уведомлений
+    val updatedNotifications = redisService.getCachedNotifications(channel)
+    // Отправляем обновленный список на клиент
+    sendUpdatedNotificationsToClient(updatedNotifications, channel)
+}
+
+fun sendUpdatedNotificationsToClient(notifications: List<String>, channel: String) {
+    notifications.forEach { notification ->
+        // Отправляем каждое уведомление на соответствующий канал
+        runBlocking {
+            WebSocketSessionManager.sendMessageToChannel(channel, notification)
+        }
+    }
 }
